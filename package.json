@@ -1,0 +1,25 @@
+{
+  "name": "estetica_canina",
+  "version": "1.0.0",
+  "description": "Proyecto de la materia de desarrollo web",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon app.js"
+  },
+  "author": "Cesar Adrian Buenrostro Alvarez",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "fullcalendar": "^6.1.17",
+    "mongodb": "^6.15.0",
+    "mssql": "^11.0.1",
+    "mysql2": "^3.14.0",
+    "sequelize": "^6.37.6"
+  }
+}

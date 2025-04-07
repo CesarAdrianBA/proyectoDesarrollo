@@ -1,0 +1,18 @@
+<%- include('./layout/header') %>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-6 mt-5">
+                <form action="/appointments" method="POST" class=" d-flex flex-column">
+                    <input class="form-control my-2" type="text" name="pet_name" placeholder="Nombre de la mascota" required>
+                    <input class="form-control my-2" type="text" name="owner_name" placeholder="Nombre del dueño" required>
+                    <input class="form-control my-2" type="text" name="service_type" placeholder="Tipo de servicio" required>
+                    <input class="form-control my-2" type="date" name="appointment_date" required>
+                    <input class="form-control my-2" type="time" name="appointment_time" required>
+                    <button type="submit">Agendar cita</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<%- include('./layout/footer') %>

@@ -1,0 +1,36 @@
+<%- include('./layout/header') %>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-8 col-md-4 offset-md-4 offset-sm-2 text-center mt-5 p-3">
+            <form>
+                <div class="mb-3">
+                    <label for="Nombre" class="form-label">Nombre</label>
+                    <input type="Nombre" class="form-control" id="Nombre" aria-describedby="NombreHelp">
+                </div>
+                <div class="mb-3">
+                    <label for="apelidos" class="form-label">Apelidos</label>
+                    <input type="apelidos" class="form-control" id="apelidos" aria-describedby="apelidosHelp">
+                </div>
+                <div class="mb-3">
+                    <label for="telefono" class="form-label">Telefono</label>
+                    <input type="telefono" class="form-control" id="telefono" aria-describedby="telefonoHelp">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Correo</label>
+                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" aria-describedby="passwordHelp">
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-5">
+                    Registrar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+    
+<%- include('./layout/footer') %>

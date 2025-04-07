@@ -1,0 +1,57 @@
+<%- include('./layout/header') %>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center">Consultor de Bases de Datos</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <form id="guiForm" class="d-flex flex-column mb-4">
+                    <div class="form-group">
+                      <label for="database">Base de datos:</label>
+                      <select id="database" class="form-control">
+                        <option selected>Selecciona una base de datos</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="sqlserver">SQL Server</option>
+                        <option value="mongodb">MongoDB</option>
+                      </select>
+                    </div>
+                  
+                    <div class="form-group">
+                      <label for="tableSelect">Tabla / Colección:</label>
+                      <select id="tableSelect" class="form-control">
+                        <option selected disabled>Selecciona una tabla</option>
+                      </select>
+                    </div>
+                  
+                    <div class="form-group">
+                      <label for="columns">Campos a mostrar:</label>
+                      <select id="columns" multiple class="form-control">
+                      </select>
+                    </div>
+                  
+                    <div class="form-group">
+                      <label for="filter">Filtro (opcional):</label>
+                      <input type="text" id="filter" class="form-control" placeholder="Ej. nombre = 'Juan'">
+                    </div>
+                  
+                    <button type="submit" class="btn btn-success mt-3">Ejecutar consulta</button>
+                  </form>
+                  
+            </div>
+        </div>
+
+        <div id="results">
+            <h3>Resultados</h3>
+            <table>
+                <thead id="resultsHeader"></thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/consultor.js"></script>
+
+<%- include('./layout/footer') %>
