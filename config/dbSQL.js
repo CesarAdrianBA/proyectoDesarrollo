@@ -20,7 +20,7 @@ async function connectSQL() {
         const pool = await sql.connect(sqlConfig);
         return pool;
     } catch (err) {
-        console.error('❌ Error al conectar SQL Server:', err);
+        console.error('Error al conectar SQL Server:', err);
         throw err;
     }
 }

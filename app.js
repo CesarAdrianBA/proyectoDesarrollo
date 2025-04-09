@@ -4,8 +4,9 @@ const router = require('./routes/rutas')
 const app = express();
 const port = 4000;
 const dbMySQL = require('./config/dbMySQL');
-const dbQuery = require('./config/DBQuery'); // Conexion MySQL
+const dbQuery = require('./config/DBQuery'); // Conexion DBS
 const { connectSQL } = require('./config/dbSQL'); // Conexion SQL
+const citas = require('./routes/citas')
 
 app.use(bodyParser.json());
 
@@ -24,7 +25,9 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
-app.use('/database', dbQuery)
+app.use('/database', dbQuery);
+
+app.use('/citas', citas);
 
 app.use('/', router)
 

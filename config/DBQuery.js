@@ -15,6 +15,7 @@ router.use(cors());
 router.post('/schema', async (req, res) => {
     const { database } = req.body;
 
+
     try {
         let tables = [];
 
@@ -24,7 +25,6 @@ router.post('/schema', async (req, res) => {
                 const [rows] = await mysqlConn.query("SHOW TABLES");
                 await mysqlConn.end();
                 tables = rows.map(row => Object.values(row)[0]);
-                console.log(tables)
                 break;
             case 'sqlserver':
                 const pool = await connectSQL();
@@ -69,7 +69,6 @@ router.post('/columns', async (req, res) => {
                 await mysqlConn.end();
                 // Extraemos los nombres de las columnas
                 columns = rows.map(row => row.Field);
-                console.log(columns);
                 break;
 
             case 'sqlserver':
@@ -88,7 +87,7 @@ router.post('/columns', async (req, res) => {
                 const db = client.db();
                 const collection = db.collection(tableOrCollection);
                 const document = await collection.findOne();
-                columns = document ? Object.keys(document) : []; // Obtenemos las keys del primer documento
+                columns = document ? Object.keys(document) : []; 
                 await client.close();
                 break;
 
@@ -106,7 +105,7 @@ router.post('/columns', async (req, res) => {
 const mongoURI = process.env.MONGO_URI;
 
 router.post('/query', async (req, res) => {
-    const { database, collection, columns, filter, operation } = req.body;
+    let { database, collection, columns, filter } = req.body;
     let query;
     try {
         let results;
@@ -122,7 +121,6 @@ router.post('/query', async (req, res) => {
                 if (filter) {
                     query += ` WHERE ${filter}`;
                 }
-                console.log(query);
                 const mysqlConn = await mysql.createConnection(mysqlConfig);
                 const [rows] = await mysqlConn.query(query); 
                 await mysqlConn.end();
@@ -142,14 +140,13 @@ router.post('/query', async (req, res) => {
                 if (filter) {
                     query += ` WHERE ${filter}`;
                 }
-                console.log(query);
 
                 const sqlResult = await pool.request().query(query);
                 
                 
                 results = sqlResult.recordset;
                 break;
-                case 'mongodb':
+            case 'mongodb':
                     const client = new MongoClient(mongoURI);
                     await client.connect();
                 
@@ -162,32 +159,150 @@ router.post('/query', async (req, res) => {
                         if (filter) {
                             parsedFilter = JSON.parse(filter);
                         }
-                    } catch (err) {
+                    } catch (err) {2
                         console.error("Error al parsear el filtro:", err);
                         return res.status(400).json({ error: 'Filtro inválido (debe ser JSON válido)' });
                     }
                 
                     // Proyección de campos (qué columnas mostrar)
                     let projection = {};
+                    if (typeof columns === 'string') {
+                        columns = columns.split(',').map(c => c.trim());
+                    }
+                    
+                    // Si columns es un array de strings
                     if (columns && Array.isArray(columns)) {
                         columns.forEach(col => {
-                            projection[col] = 1;
+                            projection[col] = 1; 
                         });
                     }
-                
-                    // Ejecutamos la consulta
+                    // if para excluir _id en caso de que no se encuentre en el arreglo columns
+                    if (columns && columns.indexOf('_id') === -1) {
+                        projection["_id"] = 0;
+                    }
                     const cursor = collectionRef.find(parsedFilter, columns.length > 0 ? { projection } : {});
                     results = await cursor.toArray();
-                
-                    await client.close();
+                    
                     break;
                 
             default:
                 return res.status(400).json({ error: 'Base de datos no soportada' });
         }
-        console.log(results)
         res.json({ success: true, results: results || [] });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/update', async (req, res) => {
+    const { selectedDatabase, selectedTable, filter, data } = req.body;
+
+    const safeData = {};
+    Object.entries(data).forEach(([key, value]) => {
+    if (key !== 'id' && key !=='ID' &&key !== 'Id' && key!== 'iD' && key !== '_id') {
+        safeData[key] = value;
+    }
+});
+
+
+    try {
+        switch (selectedDatabase) {
+            case 'mysql':
+                const mysqlConn = await mysql.createConnection(mysqlConfig);
+                const updates = Object.entries(safeData)
+                    .map(([key, value]) => `${key} = ${mysqlConn.escape(value)}`)
+                    .join(', ');
+                const query = `UPDATE ${selectedTable} SET ${updates} WHERE ${filter}`;
+                await mysqlConn.query(query);
+                await mysqlConn.end();
+                break;
+
+            case 'sqlserver':
+                const pool = await connectSQL();
+                const updatesSQL = Object.entries(safeData)
+                    .map(([key, value]) => `${key} = '${value}'`)
+                    .join(', ');
+                const sqlQuery = `UPDATE ${selectedTable} SET ${updatesSQL} WHERE ${filter}`;
+                await pool.request().query(sqlQuery);
+                break;
+
+            case 'mongodb':
+                const client = new MongoClient(mongoURI);
+                await client.connect();
+                const db = client.db();
+                const colRef = db.collection(selectedTable);
+                const parsedFilter = JSON.parse(filter);
+                if (parsedFilter._id) {
+                    const { ObjectId } = require('mongodb');
+                    parsedFilter._id = new ObjectId(parsedFilter._id);
+                }
+                await colRef.updateOne(parsedFilter, { $set: safeData });
+                await client.close();
+                break;
+
+            default:
+                return res.status(400).json({ error: "Base de datos no soportada." });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+router.post('/delete', async (req, res) => {
+    const { selectedDatabase, selectedTable, filter } = req.body;
+
+    try {
+        let result;
+
+        switch (selectedDatabase) {
+            case 'mysql':
+                if (!filter) return res.status(400).json({ error: 'Se requiere un filtro para eliminar' });
+
+                const mysqlConn = await mysql.createConnection(mysqlConfig);
+                const deleteQuery = `DELETE FROM ${selectedTable} WHERE ${filter}`;
+                const [deleteResult] = await mysqlConn.query(deleteQuery);
+                await mysqlConn.end();
+                result = { affectedRows: deleteResult.affectedRows };
+                break;
+
+            case 'sqlserver':
+                if (!filter) return res.status(400).json({ error: 'Se requiere un filtro para eliminar' });
+
+                const pool = await connectSQL();
+                const sqlDeleteQuery = `DELETE FROM ${selectedTable} WHERE ${filter}`;
+                const sqlDeleteResult = await pool.request().query(sqlDeleteQuery);
+                result = { rowsAffected: sqlDeleteResult.rowsAffected[0] };
+                break;
+
+            case 'mongodb':
+                const client = new MongoClient(mongoURI);
+                await client.connect();
+                const db = client.db();
+                const collectionRef = db.collection(selectedTable);
+
+                let parsedFilter = {};
+                try {
+                    parsedFilter = JSON.parse(filter);
+                } catch (err) {
+                    return res.status(400).json({ error: 'Filtro inválido (debe ser JSON válido)' });
+                }
+
+                const deleteMongoResult = await collectionRef.deleteMany(parsedFilter);
+                await client.close();
+
+                result = { deletedCount: deleteMongoResult.deletedCount };
+                break;
+
+            default:
+                return res.status(400).json({ error: 'Base de datos no soportada' });
+        }
+
+        res.json({ success: true, result });
+    } catch (error) {
+        console.error('Error al eliminar:', error);
         res.status(500).json({ error: error.message });
     }
 });

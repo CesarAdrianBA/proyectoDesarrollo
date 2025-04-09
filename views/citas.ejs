@@ -3,16 +3,69 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-6 mt-5">
-                <form action="/appointments" method="POST" class=" d-flex flex-column">
+                <form action="/citas/appointments" method="POST" class=" d-flex flex-column">
                     <input class="form-control my-2" type="text" name="pet_name" placeholder="Nombre de la mascota" required>
                     <input class="form-control my-2" type="text" name="owner_name" placeholder="Nombre del dueño" required>
                     <input class="form-control my-2" type="text" name="service_type" placeholder="Tipo de servicio" required>
-                    <input class="form-control my-2" type="date" name="appointment_date" required>
-                    <input class="form-control my-2" type="time" name="appointment_time" required>
+                    <input class="form-control my-2" type="date" name="appointmentDate" required>
+                    <select name="appointment_time" id="timeSelect" required>
+                        <!-- Se llenará dinámicamente con JS -->
+                      </select>
+                      
+                      <!-- Mostrar horarios ocupados -->
+                      <ul id="occupiedHours">
+                        <!-- Las horas ocupadas se agregarán aquí -->
+                      </ul>
                     <button type="submit">Agendar cita</button>
                 </form>
             </div>
         </div>
     </div>
+
+    <select name="appointment_time" id="timeSelect" required>
+        <!-- Se llenará dinámicamente con JS -->
+      </select>
+      
+      <script defer>
+        document.querySelector('#appointmentDate').addEventListener('change', async function () {
+          const date = this.value;
+          const res = await fetch(`/available-hours/${date}`);
+          const data = await res.json();
+      
+          const select = document.querySelector('#timeSelect');
+          const occupiedList = document.querySelector('#occupiedHours');
+          
+          // Limpiar los elementos previos
+          select.innerHTML = ''; // Limpiar select de horarios
+          occupiedList.innerHTML = ''; // Limpiar lista de horarios ocupados
+      
+          // Mostrar horarios ocupados
+          if (data.takenHours.length > 0) {
+            data.takenHours.forEach(hour => {
+              const li = document.createElement('li');
+              li.textContent = `Ocupado: ${hour.slice(0, 5)}`;
+              occupiedList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement('li');
+            li.textContent = 'No hay horarios ocupados';
+            occupiedList.appendChild(li);
+          }
+      
+          // Mostrar horarios disponibles en el select
+          if (data.availableHours.length === 0) {
+            const option = document.createElement('option');
+            option.text = 'No hay horarios disponibles';
+            select.add(option);
+          } else {
+            data.availableHours.forEach(hour => {
+              const option = document.createElement('option');
+              option.value = hour;
+              option.text = hour.slice(0, 5); // Solo HH:MM
+              select.add(option);
+            });
+          }
+        });
+      </script>
 
 <%- include('./layout/footer') %>

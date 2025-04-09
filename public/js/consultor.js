@@ -59,6 +59,65 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function generateForm(columns) {
+        const selectedDatabase = databaseSelect.value;
+        const selectedTable = tableSelect.value;
+    
+        let formHtml = '<form id="addForm">';
+    
+        columns.forEach(key => {
+            if (key.toLowerCase() === 'id' || key === '_id' || key === 'created_at') return;
+    
+            const lowerKey = key.toLowerCase();
+            let inputType = 'text';
+    
+            if (lowerKey.includes('fecha') || lowerKey.includes('date') || lowerKey.includes('nacimiento')) {
+                inputType = 'date';
+            }
+            if (lowerKey.includes('tiempo') || lowerKey.includes('time')) {
+                inputType = 'time';
+            }
+            if (lowerKey.includes('email')) {
+                inputType = 'email';
+            }
+             if (lowerKey.includes('telefono') || lowerKey.includes('cel') || lowerKey.includes('num') || lowerKey.includes('cantidad')) {
+                inputType = 'number';
+            }
+    
+            formHtml += `
+                <label class="form-label">${key}</label>
+                <input name="${key}" type="${inputType}" class="form-control" placeholder="${key}" required/><br/>
+            `;
+        });
+    
+        formHtml += `
+            <button type="submit" class="btn btn-success">Agregar</button>
+            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+        </form>
+        `;
+    
+        const modal = document.createElement("div");
+        modal.innerHTML = `
+            <div class="modal fade show" tabindex="-1" style="display:block; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0, 0, 0, 0.5);">
+                <div class="modal-dialog" style="display: flex; justify-content: center; align-items: center; height: 100%; margin: 0;">
+                    <div class="modal-content" style="background:#fff; padding:20px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Agregar Registro</h5>
+                            <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${formHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        document.body.appendChild(modal);
+    }
+    
+    
+
     // Manejar la selección de base de datos
     databaseSelect.addEventListener("change", (e) => {
         const selectedDatabase = e.target.value;
@@ -118,18 +177,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Función para mostrar los resultados de la consulta
     async function displayResults(results) {
-        console.log("Resultados a imprimir:", results);
-    
-        // 🔧 Convertir en array si es un solo objeto
+
+
+        // Convertir en array si es un solo objeto
         if (results && !Array.isArray(results)) {
             results = [results];
         }
     
         const resultsHeader = document.getElementById("resultsHeader");
         const resultsBody = document.getElementById("resultsBody");
+        const options = document.getElementById("options");
     
         resultsHeader.innerHTML = '';
         resultsBody.innerHTML = '';
+        options.innerHTML = '';
     
         if (Array.isArray(results) && results.length > 0) {
             const headers = Object.keys(results[0]);
@@ -138,18 +199,211 @@ document.addEventListener("DOMContentLoaded", () => {
                 th.textContent = header;
                 resultsHeader.appendChild(th);
             });
+
+            const actionsTh = document.createElement("th");
+            actionsTh.textContent = "Acciones";
+            resultsHeader.appendChild(actionsTh);
     
-            results.forEach(result => {
+            results.forEach((result, rowIndex) => {
                 const tr = document.createElement("tr");
+            
                 headers.forEach(header => {
                     const td = document.createElement("td");
                     td.textContent = result[header];
                     tr.appendChild(td);
                 });
+            
+                // Crear columna de acciones
+                const actionsTd = document.createElement("td");
+            
+                // Botón Editar
+                const editBtn = document.createElement("button");
+                editBtn.textContent = "✏️";
+                editBtn.classList.add("btn", "btn-sm", "btn-warning", "mx-1");
+                editBtn.onclick = () => handleEdit(result);
+            
+                // Botón Eliminar
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "🗑️";
+                deleteBtn.classList.add("btn", "btn-sm", "btn-danger");
+                deleteBtn.onclick = async () => handleDelete(result);
+            
+                // Agrega botones a la celda de acciones
+                actionsTd.appendChild(editBtn);
+                actionsTd.appendChild(deleteBtn);
+            
+                // Agrega la celda de acciones a la fila
+                tr.appendChild(actionsTd);
                 resultsBody.appendChild(tr);
-            });
+            });   
+            const addBtn = document.createElement("button");         
+            addBtn.textContent = "Agregar";
+            addBtn.classList.add("btn", "btn-sm", "btn-success", "mx-1");
+            const columns = Array.from(columnsSelect).map(option => option.value);
+            console.log(columns)
+            addBtn.onclick = () => generateForm(columns);
+            options.appendChild(addBtn);
         } else {
             resultsBody.innerHTML = '<tr><td colspan="100%">No se encontraron resultados.</td></tr>';
+        }
+    }
+
+    document.addEventListener("submit", async (e) => {
+        if (e.target.id === "addForm") {
+            e.preventDefault();
+    
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+    
+            const payload = {
+                database: selectedDatabase,
+                tableOrCollection: selectedTable,
+                data: data
+            };
+    
+            const response = await fetch("/database/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+    
+            const result = await response.json();
+            alert(result.success ? "Registro agregado!" : `Error: ${result.error}`);
+        }
+    });
+    
+    
+    function handleEdit(data) {
+
+        const headers = Object.keys(data);
+        const selectedDatabase = databaseSelect.value;
+        const selectedTable = tableSelect.value;
+    
+        let formHtml = '<form id="editForm">';
+        headers.forEach(key => {
+            formHtml += `
+                <label class="form-label">${key}</label>
+                <input name="${key}" value="${data[key]}" ${(key === 'id' || key ==='ID' || key === 'Id' || key=== 'iD' || key === '_id') ? 'disabled' : ''} class="form-control"/><br/>
+            `;
+        });
+        formHtml += '<button type="submit" class="btn btn-primary">Guardar</button>';
+        formHtml += '<button type="button" class="btn btn-primary" onclick="this.closest(\'.modal\').remove()">Cancelar</button>';
+        formHtml += '</form>';
+    
+        const modal = document.createElement("div");
+        modal.innerHTML = `
+        <div class="modal fade show" tabindex="-1" style="display:block; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0, 0, 0, 0.5);">
+            <div class="modal-dialog" style="display: flex; justify-content: center; align-items: center; height: 100%; margin: 0;">
+                <div class="modal-content" style="background:#fff; padding:20px;">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Registro</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="this.closest(\'.modal\').remove()"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${formHtml}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+        document.body.appendChild(modal);
+    
+        document.getElementById("editForm").onsubmit = async (e) => {
+            e.preventDefault();
+    
+            const formData = new FormData(e.target);
+            const newData = {};
+            formData.forEach((value, key) => {
+                newData[key] = value;
+            });
+    
+            let filter;
+            if (selectedDatabase === 'mongodb') {
+                filter = { _id: data._id }; // Mongo usa ObjectId en backend
+            } else {
+                const keys = Object.keys(data);
+                const key = keys[0];
+                const value = typeof data[key] === "string" ? `'${data[key]}'` : data[key];
+                filter = `${key} = ${value}`;
+            }
+    
+            const res = await fetch('http://localhost:4000/database/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    selectedDatabase,
+                    selectedTable,
+                    filter: selectedDatabase === 'mongodb' ? JSON.stringify(filter) : filter,
+                    data: newData
+                })
+            });
+    
+            const result = await res.json();
+            if (result.success) {
+                alert("Registro actualizado correctamente.");
+                modal.remove();
+            } else {
+                alert("Error al actualizar: " + result.error);
+            }
+        };
+    }
+    
+    
+    async function handleDelete(data) {
+        if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
+            console.log("Eliminar registro:", data);
+            
+        const selectedDatabase = databaseSelect.value;
+        const selectedTable = tableSelect.value;
+    
+            let filter;
+    
+            if (selectedDatabase === 'mongodb') {
+                // En MongoDB usamos JSON y hay que asegurarse de convertir _id si está presente
+                filter = {};
+                for (let key in data) {
+                    if (key === "_id") {
+                        // Convierte a ObjectId en backend, por ahora envía como string
+                        filter[key] = data[key];
+                    } else {
+                        filter[key] = data[key];
+                    }
+                }
+            } else {
+                // Para SQL y MySQL usamos una condición tipo WHERE
+                // Tomamos la primera clave-valor como filtro
+                const keys = Object.keys(data);
+                if (keys.length > 0) {
+                    const key = keys[0];
+                    const value = typeof data[key] === "string" ? `'${data[key]}'` : data[key];
+                    filter = `${key} = ${value}`;
+                } else {
+                    alert("No se puede eliminar el registro sin identificarlo.");
+                    return;
+                }
+            }
+    
+            const res = await fetch('http://localhost:4000/database/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    selectedDatabase,
+                    selectedTable,
+                    filter: selectedDatabase === 'mongodb' ? JSON.stringify(filter) : filter
+                })
+            });
+    
+            const result = await res.json();
+    
+            if (result.success) {
+                alert("Registro eliminado exitosamente.");
+            } else {
+                alert("Error al eliminar: " + result.error);
+            }
         }
     }
     

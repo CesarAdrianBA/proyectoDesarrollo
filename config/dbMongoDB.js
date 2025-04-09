@@ -8,10 +8,10 @@ const client = new MongoClient(mongoURI);
 async function connectMongo() {
     try {
         await client.connect();
-        console.log('✅ Conectado a MongoDB');
+        console.log('Conectado a MongoDB');
         return client;
     } catch (err) {
-        console.error('❌ Error al conectar a MongoDB:', err);
+        console.error('Error al conectar a MongoDB:', err);
         return null;
     }
 }
