@@ -104,7 +104,7 @@ router.post('/columns', async (req, res) => {
 
 const mongoURI = process.env.MONGO_URI;
 
-router.post('/query', async (req, res) => {
+ router.post('/query', async (req, res) => {
     let { database, collection, columns, filter } = req.body;
     let query;
     try {
@@ -194,6 +194,58 @@ router.post('/query', async (req, res) => {
     }
 });
 
+router.post('/add', async (req, res) => {
+    const { database, collection, data } = req.body;
+
+    try {
+        switch (database) {
+            case 'mysql': {
+                const conn = await mysql.createConnection(mysqlConfig);
+
+                const columns = Object.keys(data).join(", ");
+                const values = Object.values(data);
+                const placeholders = values.map(() => "?").join(", ");
+
+                const query = `INSERT INTO ${collection} (${columns}) VALUES (${placeholders})`;
+                await conn.query(query, values);
+                await conn.end();
+                break;
+            }
+
+            case 'sqlserver': {
+                const pool = await connectSQL();
+
+                const columns = Object.keys(data);
+                const values = columns.map(col => `'${data[col]}'`).join(", ");
+                const query = `INSERT INTO ${collection} (${columns.join(", ")}) VALUES (${values})`;
+                await pool.request().query(query);
+                break;
+            }
+
+            case 'mongodb': {
+                const client = new MongoClient(mongoURI);
+                await client.connect();
+
+                const db = client.db();
+                const collectionRef = db.collection(collection);
+                await collectionRef.insertOne(data);
+
+                await client.close();
+                break;
+            }
+
+            default:
+                return res.status(400).json({ error: 'Base de datos no soportada' });
+        }
+
+        res.json({ success: true, message: 'Registro agregado correctamente' });
+    } catch (error) {
+        console.error("Error en /add:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 router.post('/update', async (req, res) => {
     const { selectedDatabase, selectedTable, filter, data } = req.body;
 
@@ -253,7 +305,6 @@ router.post('/update', async (req, res) => {
 
 router.post('/delete', async (req, res) => {
     const { selectedDatabase, selectedTable, filter } = req.body;
-
     try {
         let result;
 
@@ -286,6 +337,13 @@ router.post('/delete', async (req, res) => {
                 let parsedFilter = {};
                 try {
                     parsedFilter = JSON.parse(filter);
+                    
+                    // Conversión especial para _id si es string
+                    if (parsedFilter._id && typeof parsedFilter._id === 'string') {
+                        const { ObjectId } = require('mongodb');
+                        parsedFilter._id = new ObjectId(parsedFilter._id);
+                    }
+
                 } catch (err) {
                     return res.status(400).json({ error: 'Filtro inválido (debe ser JSON válido)' });
                 }
@@ -294,6 +352,7 @@ router.post('/delete', async (req, res) => {
                 await client.close();
 
                 result = { deletedCount: deleteMongoResult.deletedCount };
+
                 break;
 
             default:

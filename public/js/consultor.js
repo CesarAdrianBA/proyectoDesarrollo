@@ -60,14 +60,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function generateForm(columns) {
-        const selectedDatabase = databaseSelect.value;
-        const selectedTable = tableSelect.value;
+        console.log(columns)
     
         let formHtml = '<form id="addForm">';
     
         columns.forEach(key => {
-            if (key.toLowerCase() === 'id' || key === '_id' || key === 'created_at') return;
-    
+            if ( key.toLowerCase == 'id' || key === '_id' || key === 'created_at') return;
+
             const lowerKey = key.toLowerCase();
             let inputType = 'text';
     
@@ -83,10 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
              if (lowerKey.includes('telefono') || lowerKey.includes('cel') || lowerKey.includes('num') || lowerKey.includes('cantidad')) {
                 inputType = 'number';
             }
-    
+
             formHtml += `
                 <label class="form-label">${key}</label>
-                <input name="${key}" type="${inputType}" class="form-control" placeholder="${key}" required/><br/>
+                <input name="${key}" type="${inputType}" ${(key === 'id' || key ==='ID' || key === 'Id' || key=== 'iD' || key === '_id') ? 'disabled' : ''} class="form-control" placeholder="${key}" required/><br/>
             `;
         });
     
@@ -114,9 +113,60 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     
         document.body.appendChild(modal);
+
+        document.getElementById("addForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+        
+            const formData = new FormData(this);
+            const data = {};
+            let hasEmpty = false;
+        
+            formData.forEach((value, key) => {
+                if (value.trim() === "") {
+                    hasEmpty = true;
+                }
+        
+                // Intenta detectar si es un campo tipo fecha
+                const input = this.querySelector(`[name="${key}"]`);
+                if (input && input.type === "date") {
+                    data[key] = new Date(value); // Convertimos a objeto Date (para MongoDB)
+                } else {
+                    data[key] = value;
+                }
+            });
+        
+            if (hasEmpty) {
+                alert("Por favor, completa todos los campos antes de guardar.");
+                return;
+            }
+        
+            const selectedDatabase = databaseSelect.value;
+            const selectedTable = tableSelect.value;
+        
+            try {
+                const response = await fetch("http://localhost:4000/database/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        database: selectedDatabase,
+                        collection: selectedTable,
+                        data
+                    })
+                });
+        
+                const result = await response.json();
+                if (result.success) {
+                    alert("Registro agregado correctamente");
+                    document.querySelector(".modal")?.remove();
+                } else {
+                    alert("Error al agregar: " + result.error);
+                }
+            } catch (error) {
+                alert("Fallo la petición: " + error.message);
+            }
+        });
+
     }
-    
-    
 
     // Manejar la selección de base de datos
     databaseSelect.addEventListener("change", (e) => {
@@ -240,7 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
             addBtn.textContent = "Agregar";
             addBtn.classList.add("btn", "btn-sm", "btn-success", "mx-1");
             const columns = Array.from(columnsSelect).map(option => option.value);
-            console.log(columns)
             addBtn.onclick = () => generateForm(columns);
             options.appendChild(addBtn);
         } else {
@@ -248,32 +297,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    document.addEventListener("submit", async (e) => {
-        if (e.target.id === "addForm") {
-            e.preventDefault();
+
     
-            const formData = new FormData(e.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
-    
-            const payload = {
-                database: selectedDatabase,
-                tableOrCollection: selectedTable,
-                data: data
-            };
-    
-            const response = await fetch("/database/add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-    
-            const result = await response.json();
-            alert(result.success ? "Registro agregado!" : `Error: ${result.error}`);
-        }
-    });
     
     
     function handleEdit(data) {
@@ -283,10 +308,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedTable = tableSelect.value;
     
         let formHtml = '<form id="editForm">';
+
         headers.forEach(key => {
+
+            if ( key.toLowerCase == 'id' || key === '_id' || key === 'created_at') return;
+
+            const lowerKey = key.toLowerCase();
+            let inputType = 'text';
+    
+            if (lowerKey.includes('fecha') || lowerKey.includes('date') || lowerKey.includes('nacimiento')) {
+                inputType = 'date';
+            }
+            if (lowerKey.includes('tiempo') || lowerKey.includes('time')) {
+                inputType = 'time';
+            }
+            if (lowerKey.includes('email')) {
+                inputType = 'email';
+            }
+             if (lowerKey.includes('telefono') || lowerKey.includes('cel') || lowerKey.includes('num') || lowerKey.includes('cantidad')) {
+                inputType = 'number';
+            }
+
             formHtml += `
                 <label class="form-label">${key}</label>
-                <input name="${key}" value="${data[key]}" ${(key === 'id' || key ==='ID' || key === 'Id' || key=== 'iD' || key === '_id') ? 'disabled' : ''} class="form-control"/><br/>
+                <input name="${key}" type="${inputType}" value="${data[key]}" ${(key === 'id' || key ==='ID' || key === 'Id' || key=== 'iD' || key === '_id') ? 'disabled' : ''} class="form-control"/><br/>
             `;
         });
         formHtml += '<button type="submit" class="btn btn-primary">Guardar</button>';
@@ -344,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
             const result = await res.json();
             if (result.success) {
-                alert("Registro actualizado correctamente.");
+                alert("Registro actualizado correctamente."); 
                 modal.remove();
             } else {
                 alert("Error al actualizar: " + result.error);
@@ -355,8 +400,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     async function handleDelete(data) {
         if (confirm("¿Estás seguro de que deseas eliminar este registro?")) {
-            console.log("Eliminar registro:", data);
             
+
         const selectedDatabase = databaseSelect.value;
         const selectedTable = tableSelect.value;
     

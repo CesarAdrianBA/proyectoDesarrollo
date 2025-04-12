@@ -14,6 +14,10 @@ router.use(cors());
 
 router.post('/appointments', async (req, res) => {
     const { pet_name, owner_name, service_type, appointment_date, appointment_time } = req.body;
+    if (!pet_name || !owner_name || !service_type || !appointment_date || !appointment_time) {
+      console.log(req.body)
+      return res.status(400).send('Faltan campos obligatorios');
+    }
 
     const allowedHours = [
         '09:00:00', '10:00:00', '11:00:00', '12:00:00',
@@ -29,7 +33,7 @@ router.post('/appointments', async (req, res) => {
       const mysqlConn = await mysql.createConnection(mysqlConfig);
   
       const [existing] = await mysqlConn.execute(
-        `SELECT * FROM appointments WHERE appointment_date = ? AND appointment_time = ?`,
+        `SELECT * FROM citas WHERE fecha_cita = ? AND hora_cita = ?`,
         [appointment_date, appointment_time]
       );
   
@@ -39,7 +43,7 @@ router.post('/appointments', async (req, res) => {
       }
   
       const [result] = await mysqlConn.execute(
-        `INSERT INTO appointments (pet_name, owner_name, service_type, appointment_date, appointment_time) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO citas (nombre_mascota, nombre_dueño, servicio, fecha_cita, hora_cita) VALUES (?, ?, ?, ?, ?)`,
         [pet_name, owner_name, service_type, appointment_date, appointment_time]
       );
   
@@ -50,9 +54,9 @@ router.post('/appointments', async (req, res) => {
       console.error(err);
       res.status(500).send('Error al registrar la cita');
     }
-  });
+});
 
-  router.get('/available-hours/:date', async (req, res) => {
+router.get('/available-hours/:date', async (req, res) => {
     const appointment_date = req.params.date;
   
     // Rango de horas posibles (hora exacta, formato HH:MM:SS)
@@ -66,11 +70,13 @@ router.post('/appointments', async (req, res) => {
       const mysqlConn = await mysql.createConnection(mysqlConfig);
   
       const [results] = await mysqlConn.execute(
-        `SELECT appointment_time FROM appointments WHERE appointment_date = ?`,
+        `SELECT hora_cita FROM citas WHERE fecha_cita = ?`,
         [appointment_date]
       );
   
-      const takenHours = results.map(row => row.appointment_time.slice(0, 8)); // HH:MM:SS
+      console.log(results)
+
+      const takenHours = results.map(row => row.hora_cita.slice(0, 8));
   
       const availableHours = allHours.filter(hour => !takenHours.includes(hour));
   
@@ -80,7 +86,7 @@ router.post('/appointments', async (req, res) => {
       console.error(err);
       res.status(500).send('Error al consultar disponibilidad');
     }
-  });
+});
   
 
   module.exports = router;
