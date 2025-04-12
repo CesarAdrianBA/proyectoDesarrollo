@@ -1,46 +1,29 @@
 <%- include('./layout/header') %>
 
-    <h1>Productos</h1>
-
-    <% 
-        let products = [
-            { id: 1, name: 'Product 1', price: 10 },
-            { id: 2, name: 'Product 2', price: 20 },
-            { id: 3, name: 'Product 3', price: 30 },
-            { id: 4, name: 'Product 4', price: 40 },
-            { id: 5, name: 'Product 5', price: 10 },
-            { id: 6, name: 'Product 6', price: 20 },
-            { id: 7, name: 'Product 7', price: 30 },
-            { id: 8, name: 'Product 8', price: 40 },
-        ] 
-        let prueba = 'Funciona';
-    %>
-
-    <div class="container-fluid">
-        <div class="row">
-            <div class="card mb-3 col-md-12">
-                <img src="#" class="card-img-top" alt="...">
-                <div class="card-body">
-                  <h5 class="card-title">Producto Destacado</h5>
-                  <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-                  <p class="card-text"><small class="text-body-secondary">Descuentos o algo</small></p>
-                </div>
-        </div>
-            <div class="card-group justify-content-around">
-                <% for (var i = 0; i < products.length; i++) { %>            
-                    <div class="col-3 mx-1">
-                        <div class="card my-4">
-                            <img src="" class="card-img-top" alt="...">
-                            <div class="card-body">
-                                <h4 class="card-title"><%= products[i].name %></h4>
-                                <h5 class="card-text text-end"><%= products[i].price %> $</h5>
-                                <a href="#" class="btn btn-primary">Agregar al Carrito</a>
-                            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="card-group justify-content-around">
+            <% for (let i = 0; i < products.length; i++) { %>            
+                <div class="col-3 mx-1">
+                    <div class="card my-4">
+                        <img src="<%= products[i].image_url %>" class="card-img-top" alt="<%= products[i].name %>">
+                        <div class="card-body">
+                            <h4 class="card-title"><%= products[i].name %></h4>
+                            <h5 class="card-text text-end"><%= products[i].price %> $</h5>
+                            <form action="/agregar-carrito" method="POST">
+                                <input type="hidden" name="id" value="<%= products[i].id %>">
+                                <input type="hidden" name="name" value="<%= products[i].name %>">
+                                <input type="hidden" name="price" value="<%= products[i].price %>">
+                                <button type="submit" class="btn btn-primary">Agregar al Carrito</button>
+                            </form>
                         </div>
                     </div>
-                <% } %>
+                </div>
+            <% } %>
         </div>
     </div>
+</div>
 
-    
+
+
 <%- include('./layout/footer') %>

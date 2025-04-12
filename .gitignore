@@ -167,5 +167,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-public/img
+public/images
 # End of https://www.toptal.com/developers/gitignore/api/windows,node

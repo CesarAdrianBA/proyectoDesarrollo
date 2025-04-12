@@ -1,5 +1,60 @@
 <%- include('./layout/header') %>
 
-    <h1>Carrito</h1>
-    
+<div class="container mt-5">
+  <h2 class="mb-4">Carrito de Compras</h2>
+
+  <% if (!cart || cart.length === 0) { %>
+    <p>El carrito está vacío.</p>
+  <% } else { %>
+    <table class="table table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% let total = 0; %>
+        <% cart.forEach(product => { 
+             const subtotal = product.price * product.qty;
+             total += subtotal;
+        %>
+          <tr>
+            <td><%= product.name %></td>
+            <td><%= product.price %> $</td>
+            <td>
+                <form action="/actualizar-cantidad" method="POST" class="d-flex">
+                    <input type="hidden" name="id" value="<%= product.id %>">
+                    <input type="number" name="qty" value="<%= product.qty %>" min="1" class="form-control form-control-sm w-50 me-2">
+                    <button class="btn btn-primary btn-sm">Actualizar</button>
+                </form>
+            </td>
+            <td><%= subtotal %> $</td>
+            <td>
+              <form action="/eliminar-producto" method="POST" style="display:inline;">
+                <input type="hidden" name="id" value="<%= product.id %>">
+                <button class="btn btn-danger btn-sm">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <tr>
+          <td colspan="3" class="text-end fw-bold">Total</td>
+          <td colspan="2" class="fw-bold"><%= total %> $</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <form action="/vaciar-carrito" method="POST">
+      <button class="btn btn-warning">Vaciar Carrito</button>
+    </form>
+    <form action="/finalizar-compra" method="POST">
+        <button class="btn btn-success mt-3">Finalizar Compra</button>
+    </form>
+  <% } %>
+</div>
+
 <%- include('./layout/footer') %>

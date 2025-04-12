@@ -1,12 +1,14 @@
 const express = require('express');
 const bodyParser = require("body-parser");
+const session = require('express-session');
 const router = require('./routes/rutas')
 const app = express();
 const port = 4000;
 const dbMySQL = require('./config/dbMySQL');
 const dbQuery = require('./config/DBQuery'); // Conexion DBS
 const { connectSQL } = require('./config/dbSQL'); // Conexion SQL
-const citas = require('./routes/citas')
+
+const citas = require('./routes/citas');
 
 app.use(bodyParser.json());
 
@@ -22,6 +24,12 @@ app.use(express.static('public'));
 
 app.set('view engine', 'ejs');
 
+app.use(session({
+    secret: 'secret', 
+    resave: false,
+    saveUninitialized: true
+  }));
+
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
@@ -29,7 +37,7 @@ app.use('/database', dbQuery);
 
 app.use('/citas', citas);
 
-app.use('/', router)
+app.use('/', router);
 
 app.listen(port, ()=> {
     console.log(`Server is running on port ${port}`);
