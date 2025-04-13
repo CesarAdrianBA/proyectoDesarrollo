@@ -15,7 +15,6 @@ router.use(cors());
 router.post('/appointments', async (req, res) => {
     const { pet_name, owner_name, service_type, appointment_date, appointment_time } = req.body;
     if (!pet_name || !owner_name || !service_type || !appointment_date || !appointment_time) {
-      console.log(req.body)
       return res.status(400).send('Faltan campos obligatorios');
     }
 
@@ -46,9 +45,17 @@ router.post('/appointments', async (req, res) => {
         `INSERT INTO citas (nombre_mascota, nombre_dueño, servicio, fecha_cita, hora_cita) VALUES (?, ?, ?, ?, ?)`,
         [pet_name, owner_name, service_type, appointment_date, appointment_time]
       );
+
+      req.session.lastAppointment = {
+        pet_name,
+        owner_name,
+        service_type,
+        appointment_date,
+        appointment_time
+      };
   
       await mysqlConn.end();
-      res.send('Cita registrada correctamente');
+      res.redirect('/ticket-cita');
   
     } catch (err) {
       console.error(err);
@@ -74,8 +81,6 @@ router.get('/available-hours/:date', async (req, res) => {
         [appointment_date]
       );
   
-      console.log(results)
-
       const takenHours = results.map(row => row.hora_cita.slice(0, 8));
   
       const availableHours = allHours.filter(hour => !takenHours.includes(hour));

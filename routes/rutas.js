@@ -117,6 +117,19 @@ router.get('/citas', (req,res) => {
     });
 })
 
+router.get('/ticket-cita', (req, res) => {
+  const appointment = req.session.lastAppointment;
+
+  if (!appointment) {
+    return res.redirect('/citas'); // si no hay info, redirige
+  }
+
+  res.render('ticketCita', {
+    title: 'Ticket de Cita',
+    appointment
+  });
+});
+
 router.get('/consultor', (req,res) => {
     res.render('consultorDB', {
         title: 'consultor',
@@ -214,6 +227,7 @@ router.post('/finalizar-compra', (req, res) => {
     ticket
   });
 });
+
 
 
 

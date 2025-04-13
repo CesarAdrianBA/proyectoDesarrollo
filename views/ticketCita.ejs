@@ -1,0 +1,20 @@
+<%- include('./layout/header') %>
+
+<div class="container mt-5 printable">
+  <h2 class="text-center">Ticket de Cita</h2>
+  <hr>
+  <p><strong>Nombre del dueño:</strong> <%= appointment.owner_name %></p>
+  <p><strong>Nombre de la mascota:</strong> <%= appointment.pet_name %></p>
+  <p><strong>Servicio:</strong> <%= appointment.service_type %></p>
+  <p><strong>Fecha:</strong> <%= appointment.appointment_date %></p>
+  <p><strong>Hora:</strong> <%= appointment.appointment_time %></p>
+  <hr>
+  <p class="text-center">Gracias por agendar tu cita con nosotros 🐾</p>
+
+  <div class="text-center mt-3 buttons-hide">
+    <a href="/citas" class="btn btn-secondary">Volver</a>
+    <button onclick="window.print()" class="btn btn-success">Imprimir Ticket</button>
+  </div>
+</div>
+
+<%- include('./layout/footer') %>

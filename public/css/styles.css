@@ -351,6 +351,23 @@ style.css
 
 
 
-  /* pilar */
+/* General */
 
-  
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printable, .printable * {
+    visibility: visible;
+  }
+  .printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  /*Ocultar los botones contenidos en buttons-hidden*/
+  .buttons-hide {
+    display: none;
+  }
+}
