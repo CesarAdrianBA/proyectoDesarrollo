@@ -5,7 +5,7 @@
         <div class="user_options-unregistered">
           <h2 class="user_unregistered-title">No tienes una cuenta?</h2>
           <p class="user_unregistered-text">Registrate para conocer nuestros servicios</p>
-          <button class="user_unregistered-signup" id="signup-button">Entrar</button>
+          <button class="user_unregistered-signup" id="signup-button">Registrar</button>
         </div>
 
         <div class="user_options-registered">
@@ -18,38 +18,38 @@
       <div class="user_options-forms" id="user_options-forms">
         <div class="user_forms-login">
           <h2 class="forms_title">Inicio</h2>
-          <form class="forms_form">
+          <form class="forms_form" action="/login" method="POST">
             <fieldset class="forms_fieldset">
               <div class="forms_field">
-                <input type="email" placeholder="Email" class="forms_field-input" required autofocus />
+                <input type="email" placeholder="Email" class="forms_field-input" name="correo" required autofocus />
               </div>
               <div class="forms_field">
-                <input type="password" placeholder="Password" class="forms_field-input" required />
+                <input type="password" placeholder="Password" class="forms_field-input" name="password" required />
               </div>
             </fieldset>
             <div class="forms_buttons">
               <button type="button" class="forms_buttons-forgot">Olvidaste tu contraseña??</button>
-              <input type="submit" value="Entrar" class="forms_buttons-action">
+              <button type="submit" class="btn btn-primary">Entrar</button>
             </div>
           </form>
         </div>
 
         <div class="user_forms-signup">
-          <h2 class="forms_title">Entrar</h2>
-          <form class="forms_form">
+          <h2 class="forms_title">Registrar</h2>
+          <form class="forms_form" action="/register" method="POST">
             <fieldset class="forms_fieldset">
               <div class="forms_field">
-                <input type="text" placeholder="Nombre" class="forms_field-input" required />
+                <input type="text" placeholder="Nombre" class="forms_field-input" name="nombre" required />
               </div>
               <div class="forms_field">
-                <input type="email" placeholder="Email" class="forms_field-input" required />
+                <input type="email" placeholder="Email" class="forms_field-input" name="correo" required />
               </div>
               <div class="forms_field">
-                <input type="password" placeholder="Password" class="forms_field-input" required />
+                <input type="password" placeholder="Password" class="forms_field-input" name="password" required />
               </div>
             </fieldset>
             <div class="forms_buttons">
-              <input type="submit" value="Entrar" class="forms_buttons-action">
+              <button type="submit" class="btn btn-primary">Registrar</button>
             </div>
           </form>
         </div>
