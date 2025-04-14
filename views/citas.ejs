@@ -1,23 +1,41 @@
 <%- include('./layout/header') %>
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-6 mt-5">
-                <form action="/citas/appointments" method="POST" class=" d-flex flex-column">
-                    <input class="form-control my-2" type="text" name="pet_name" placeholder="Nombre de la mascota" required>
-                    <input class="form-control my-2" type="text" name="owner_name" placeholder="Nombre del dueño" required>
-                    <input class="form-control my-2" type="text" name="service_type" placeholder="Tipo de servicio" required>
-                    <input class="form-control my-2" type="date" name="appointment_date" id="appointmentDate" required>
-                    <select name="appointment_time" id="timeSelect" required>
-                      <option value="">Selecciona una hora</option>
-                    </select>
-                    <button type="submit">Agendar cita</button>
-                </form>
-            </div>
-        </div>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="appointment-card">
+        <h3 class="text-center mb-4">📅 Agenda una cita para tu mascota</h3>
+        <form action="/appointments" method="POST">
+          <div class="mb-3">
+            <label for="pet_name" class="form-label">🐾 Nombre de la mascota</label>
+            <input type="text" class="form-control" id="pet_name" name="pet_name" placeholder="Ej: Firulais" required>
+          </div>
+          <div class="mb-3">
+            <label for="owner_name" class="form-label">👤 Nombre del dueño</label>
+            <input type="text" class="form-control" id="owner_name" name="owner_name" placeholder="Ej: Juan Pérez" required>
+          </div>
+          <div class="mb-3">
+            <label for="service_type" class="form-label">✂️ Tipo de servicio</label>
+            <input type="text" class="form-control" id="service_type" name="service_type" placeholder="Ej: Corte, baño, limpieza" required>
+          </div>
+          <div class="mb-3">
+            <label for="appointment_date" class="form-label">📅 Fecha de la cita</label>
+            <input type="date" class="form-control" id="appointmentDate" name="appointment_date" required>
+          </div>
+          <div class="mb-4">
+            <label for="timeSelect" class="form-label">🕒 Hora</label>
+            <select class="form-select" name="appointment_time" id="timeSelect" required>
+              <option value="">Selecciona una hora</option>
+              <!-- Las opciones se llenan con JS -->
+            </select>
+          </div>
+          <button type="submit" class="btn btn-appointment w-100">Agendar Cita</button>
+        </form>
+      </div>
     </div>
+  </div>
+</div>
 
-      
-    <script src="/js/citas.js"></script>
+<script src="/js/citas.js"></script>
 
 <%- include('./layout/footer') %>
